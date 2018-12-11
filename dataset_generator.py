@@ -95,6 +95,7 @@ def get_list_of_images(root_dir, N=1):
     img_list = glob.glob(os.path.join(root_dir, '*/*.jpg'))
     img_list_f = []
     for i in xrange(N):
+        # sample len(img_list) unique images from the list
         img_list_f = img_list_f + random.sample(img_list, len(img_list))
     return img_list_f
 
@@ -274,19 +275,28 @@ def create_image_anno(objects, distractor_objects, img_file, anno_file, bg_file,
         backgrounds = []
         for i in xrange(len(blending_list)):
             backgrounds.append(background.copy())
+
+        # create a mask map for every image to synthesize
+        # masks are not RGB but 8-bit images
+        mask_map = [Image.new('L', (w,h), color=0) for count in xrange(len(backgrounds))];
         
         if dontocclude:
             already_syn = []
         for idx, obj in enumerate(all_objects):
            foreground = Image.open(obj[0])
+           # resize the object image to the background size
+           source_img_scale = float(w) / foreground.size[0]
            xmin, xmax, ymin, ymax = get_annotation_from_mask_file(get_mask_file(obj[0]))
            if xmin == -1 or ymin == -1 or xmax-xmin < MIN_WIDTH or ymax-ymin < MIN_HEIGHT :
                continue
            foreground = foreground.crop((xmin, ymin, xmax, ymax))
+           foreground = foreground.resize((int(foreground.size[0]*source_img_scale), int(foreground.size[1]*source_img_scale)), Image.ANTIALIAS)
            orig_w, orig_h = foreground.size
            mask_file =  get_mask_file(obj[0])
            mask = Image.open(mask_file)
            mask = mask.crop((xmin, ymin, xmax, ymax))
+           mask = mask.resize(foreground.size, Image.NEAREST)
+
            if INVERTED_MASK:
                mask = Image.fromarray(255-PIL2array1C(mask))
            o_w, o_h = orig_w, orig_h
@@ -311,10 +321,12 @@ def create_image_anno(objects, distractor_objects, img_file, anno_file, bg_file,
                foreground = foreground_tmp
            xmin, xmax, ymin, ymax = get_annotation_from_mask(mask)
            attempt = 0
+
            while True:
                attempt +=1
-               x = random.randint(int(-MAX_TRUNCATION_FRACTION*o_w), int(w-o_w+MAX_TRUNCATION_FRACTION*o_w))
-               y = random.randint(int(-MAX_TRUNCATION_FRACTION*o_h), int(h-o_h+MAX_TRUNCATION_FRACTION*o_h))
+               # place the crop somewhere in a rectngular zone at the center of the image
+               x = random.randint(int(-MAX_TRUNCATION_FRACTION*o_w + MIN_X_POSITION), int(MAX_X_POSITION-o_w+MAX_TRUNCATION_FRACTION*o_w))
+               y = random.randint(int(-MAX_TRUNCATION_FRACTION*o_h + MIN_Y_POSITION), int(MAX_Y_POSITION-o_h+MAX_TRUNCATION_FRACTION*o_h))
                if dontocclude:
                    found = True
                    for prev in already_syn:
@@ -331,6 +343,7 @@ def create_image_anno(objects, distractor_objects, img_file, anno_file, bg_file,
                    break
            if dontocclude:
                already_syn.append([x+xmin, x+xmax, y+ymin, y+ymax])
+           # paste foreground patch onto background and apply any blending transform if requested
            for i in xrange(len(blending_list)):
                if blending_list[i] == 'none' or blending_list[i] == 'motion':
                    backgrounds[i].paste(foreground, (x, y), mask)
@@ -349,6 +362,12 @@ def create_image_anno(objects, distractor_objects, img_file, anno_file, bg_file,
                   backgrounds[i].paste(foreground, (x, y), Image.fromarray(cv2.GaussianBlur(PIL2array1C(mask),(5,5),2)))
                elif blending_list[i] == 'box':
                   backgrounds[i].paste(foreground, (x, y), Image.fromarray(cv2.blur(PIL2array1C(mask),(3,3))))
+
+               # paste masks into the mask map
+               foreground_map_color = Image.new('L', foreground.size, random.randint(1,255));
+               mask_map[i].paste(foreground_map_color, (x,y), mask);
+               #mask_map[i].show()
+
            if idx >= len(objects):
                continue 
            object_root = SubElement(top, 'object')
@@ -374,6 +393,7 @@ def create_image_anno(objects, distractor_objects, img_file, anno_file, bg_file,
         if blending_list[i] == 'motion':
             backgrounds[i] = LinearMotionBlur3C(PIL2array3C(backgrounds[i]))
         backgrounds[i].save(img_file.replace('none', blending_list[i]))
+        mask_map[i].save(img_file.replace('.jpg', '.png'))
 
     xmlstr = xml.dom.minidom.parseString(tostring(top)).toprettyxml(indent="    ")
     with open(anno_file, "w") as f:
@@ -396,7 +416,8 @@ def gen_syn_data(img_files, labels, img_dir, anno_dir, scale_augment, rotation_a
     w = WIDTH
     h = HEIGHT
     background_dir = BACKGROUND_DIR
-    background_files = glob.glob(os.path.join(background_dir, BACKGROUND_GLOB_STRING))
+    background_files = glob.glob(os.path.join(background_dir, BACKGROUND_GLOB_STRING)) * BACKGROUND_USES
+
    
     print "Number of background images : %s"%len(background_files) 
     img_labels = zip(img_files, labels)
