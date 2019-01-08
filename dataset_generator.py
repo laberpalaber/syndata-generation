@@ -9,10 +9,11 @@ import numpy as np
 import random
 from PIL import Image
 import scipy
-from multiprocessing import Pool
+from multiprocessing import Pool, Manager
 from functools import partial
 import signal
 import time
+import json
 
 from defaults import *
 sys.path.insert(0, POISSON_BLENDING_DIR)
@@ -196,6 +197,31 @@ def write_labels_file(exp_dir, labels):
         for i, label in enumerate(unique_labels):
             f.write('%s %s\n'%(i, label))
 
+def write_dataset_json(exp_dir, dataset_dict):
+    '''Writes the dataset image dependencies in a JSON file
+    Args:
+        exp_dir(string): Experiment directory where all the generated images, annotation and imageset
+                         files will be stored
+        dataset_dict(dict): Dictionary where object dependencies and mask IDs are stored
+    '''
+    jsonFormatDataset = json.dumps(dataset_dict)
+    with open(os.path.join(exp_dir,'dataset.json'), 'w') as f:
+        json.dump(jsonFormatDataset, f)
+
+def get_labels_dict(labels):
+    '''Writes the labels in a dictionary and returns it
+
+    Args:
+        labels(list): List of labels. This will be useful while training an object detector
+    Returns:
+        labels_dict(dict): Dictionary containing an entry for each class label with the corresponding index
+    '''
+    unique_labels = ['__background__'] + sorted(set(labels))
+    labels_dict = {}
+    for i, label in enumerate(unique_labels):
+        labels_dict[label] = i
+    return labels_dict
+
 def keep_selected_labels(img_files, labels):
     '''Filters image files and labels to only retain those that are selected. Useful when one doesn't 
        want all objects to be used for synthesis
@@ -239,12 +265,12 @@ def PIL2array3C(img):
     return np.array(img.getdata(),
                     np.uint8).reshape(img.size[1], img.size[0], 3)
 
-def create_image_anno_wrapper(args, w=WIDTH, h=HEIGHT, scale_augment=False, rotation_augment=False, blending_list=['none'], dontocclude=False):
+def create_image_anno_wrapper(args, dataset_dict, w=WIDTH, h=HEIGHT, scale_augment=False, rotation_augment=False, blending_list=['none'], dontocclude=False):
    ''' Wrapper used to pass params to workers
    '''
-   return create_image_anno(*args, w=w, h=h, scale_augment=scale_augment, rotation_augment=rotation_augment, blending_list=blending_list, dontocclude=dontocclude)
+   return create_image_anno(*args, dataset_dict=dataset_dict, w=w, h=h, scale_augment=scale_augment, rotation_augment=rotation_augment, blending_list=blending_list, dontocclude=dontocclude)
 
-def create_image_anno(objects, distractor_objects, img_file, anno_file, bg_file,  w=WIDTH, h=HEIGHT, scale_augment=False, rotation_augment=False, blending_list=['none'], dontocclude=False):
+def create_image_anno(objects, distractor_objects, img_file, anno_file, bg_file, dataset_dict,  w=WIDTH, h=HEIGHT, scale_augment=False, rotation_augment=False, blending_list=['none'], dontocclude=False):
     '''Add data augmentation, synthesizes images and generates annotations according to given parameters
 
     Args:
@@ -333,7 +359,7 @@ def create_image_anno(objects, distractor_objects, img_file, anno_file, bg_file,
                    # if we accept occlusion, there is no need to iterate trying to find unoccluded spots
                    break
                else:
-                   # if we don't, look for a suitable space until we run out of trials or we find onex
+                   # if we don't, look for a suitable space until we run out of trials or we find one
                    found = True
                    for prev in already_syn:
                        ra = Rectangle(prev[0], prev[2], prev[1], prev[3])
@@ -397,7 +423,14 @@ def create_image_anno(objects, distractor_objects, img_file, anno_file, bg_file,
     for i in xrange(len(blending_list)):
         if blending_list[i] == 'motion':
             backgrounds[i] = LinearMotionBlur3C(PIL2array3C(backgrounds[i]))
-        backgrounds[i].save(img_file.replace('none', blending_list[i]))
+        result_image_filename = img_file.replace('none', blending_list[i])
+        backgrounds[i].save(result_image_filename)
+
+        # Copy the maskID entry, modify it and then copy it back into the shared dict
+        dict_entry = dataset_dict[result_image_filename]
+        for item in object_instances_mask_label:
+            dict_entry['MaskID'][item[1]] = item[0]
+        dataset_dict[result_image_filename] = dict_entry
 
     mask_map.save(img_file.replace('image_none.jpg', 'mask.png'))
 
@@ -409,8 +442,8 @@ def create_image_anno(objects, distractor_objects, img_file, anno_file, bg_file,
     with open(anno_file, "w") as f:
         f.write(xmlstr)
    
-def gen_syn_data(img_files, labels, img_dir, anno_dir, scale_augment, rotation_augment, dontocclude, add_distractors):
-    '''Creates list of objects and distrctor objects to be pasted on what images.
+def gen_syn_data(img_files, labels, img_dir, anno_dir, mask_dir, scale_augment, rotation_augment, dontocclude, add_distractors):
+    '''Creates list of objects and distractor objects to be pasted on what images.
        Spawns worker processes and generates images according to given params
 
     Args:
@@ -418,6 +451,7 @@ def gen_syn_data(img_files, labels, img_dir, anno_dir, scale_augment, rotation_a
         labels(list): List of labels for each image
         img_dir(str): Directory where synthesized images will be stored
         anno_dir(str): Directory where corresponding annotations will be stored
+        mask_dir(str): Directory where the masks will be stored
         scale_augment(bool): Add scale data augmentation
         rotation_augment(bool): Add rotation data augmentation
         dontocclude(bool): Generate images with occlusion
@@ -446,9 +480,12 @@ def gen_syn_data(img_files, labels, img_dir, anno_dir, scale_augment, rotation_a
         distractor_files = []
     print "List of distractor files collected: %s" % distractor_files
 
+    manager = Manager()
+    dataset_dict = manager.dict()
     idx = 0
     img_files = []
     anno_files = []
+    mask_files = []
     params_list = []
     while len(img_labels) > 0:
         # Get list of objects
@@ -469,12 +506,20 @@ def gen_syn_data(img_files, labels, img_dir, anno_dir, scale_augment, rotation_a
         for blur in BLENDING_LIST:
             img_file = os.path.join(img_dir, '%i_image_%s.jpg'%(idx,blur))
             anno_file = os.path.join(anno_dir, '%i.xml'%idx)
+            mask_file = os.path.join(mask_dir, '%i.png'%idx)
+            image_dependency_entry = {
+                "MaskPath":mask_file,
+                "Annotations":anno_file,
+                "MaskID":{}
+            }
+            dataset_dict[img_file] = image_dependency_entry
             params = (objects, distractor_objects, img_file, anno_file, bg_file)
             params_list.append(params)
             img_files.append(img_file)
             anno_files.append(anno_file)
+            mask_files.append(mask_file)
 
-    partial_func = partial(create_image_anno_wrapper, w=w, h=h, scale_augment=scale_augment, rotation_augment=rotation_augment, blending_list=BLENDING_LIST, dontocclude=dontocclude) 
+    partial_func = partial(create_image_anno_wrapper, dataset_dict=dataset_dict, w=w, h=h, scale_augment=scale_augment, rotation_augment=rotation_augment, blending_list=BLENDING_LIST, dontocclude=dontocclude)
     p = Pool(NUMBER_OF_WORKERS, init_worker)
     try:
         p.map(partial_func, params_list)
@@ -484,11 +529,12 @@ def gen_syn_data(img_files, labels, img_dir, anno_dir, scale_augment, rotation_a
     else:
         p.close()
     p.join()
-    return img_files, anno_files
+
+    return img_files, anno_files, dataset_dict.copy()
 
 def init_worker():
     '''
-    Catch Ctrl+C signal to termiante workers
+    Catch Ctrl+C signal to terminate workers
     '''
     signal.signal(signal.SIGINT, signal.SIG_IGN)
  
@@ -503,33 +549,43 @@ def generate_synthetic_dataset(args):
 
     if not os.path.exists(args.exp):
         os.makedirs(args.exp)
+
+    # Create a structure with all the paths for the dataset
+    dataset_dict = {}
+    dataset_dict['Classes'] = get_labels_dict(labels)
     
     write_labels_file(args.exp, labels)
 
     anno_dir = os.path.join(args.exp, 'annotations')
     img_dir = os.path.join(args.exp, 'images')
+    mask_dir = os.path.join(args.exp, 'masks')
     if not os.path.exists(os.path.join(anno_dir)):
         os.makedirs(anno_dir)
     if not os.path.exists(os.path.join(img_dir)):
         os.makedirs(img_dir)
+    if not os.path.exists(os.path.join(mask_dir)):
+        os.makedirs(mask_dir)
     
-    syn_img_files, anno_files = gen_syn_data(img_files, labels, img_dir, anno_dir, args.scale, args.rotation, args.dontocclude, args.add_distractors)
+    syn_img_files, anno_files, image_dependencies = gen_syn_data(img_files, labels, img_dir, anno_dir, mask_dir, args.scale, args.rotation, args.dontocclude, args.add_distractors)
+    dataset_dict['Images'] = image_dependencies
     write_imageset_file(args.exp, syn_img_files, anno_files)
+
+    write_dataset_json(args.exp, dataset_dict)
 
 def parse_args():
     '''Parse input arguments
     '''
     parser = argparse.ArgumentParser(description="Create dataset with different augmentations")
     parser.add_argument("root",
-      help="The root directory which contains the images and annotations.")
+      help="The root directory which contains images, annotations and masks.")
     parser.add_argument("exp",
-      help="The directory where images and annotation lists will be created.")
+      help="The directory where images, annotations and mask lists will be created.")
     parser.add_argument("--selected",
       help="Keep only selected instances in the test dataset. Default is to keep all instances in the root directory", action="store_true")
     parser.add_argument("--scale",
-      help="Add scale augmentation.Default is to add scale augmentation.", action="store_false")
+      help="Add scale augmentation. Default is to add scale augmentation.", action="store_false")
     parser.add_argument("--rotation",
-      help="Add rotation augmentation.Default is to add rotation augmentation.", action="store_false")
+      help="Add rotation augmentation. Default is to add rotation augmentation.", action="store_false")
     parser.add_argument("--num",
       help="Number of times each image will be in dataset", default=1, type=int)
     parser.add_argument("--dontocclude",
