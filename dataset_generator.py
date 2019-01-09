@@ -287,11 +287,12 @@ def create_image_anno(objects, distractor_objects, img_file, anno_file, bg_file,
         blending_list(list): List of blending modes to synthesize for each image
         dontocclude(bool): Generate images with occlusion
     '''
-    print "Working on %s" % img_file
+    print "Working on root %s" % img_file
     if os.path.exists(anno_file):
         return anno_file
     
     all_objects = objects + distractor_objects
+    synthesized_images = 0
     while True:
         object_instances_mask_label = []
         top = Element('annotation')
@@ -421,9 +422,9 @@ def create_image_anno(objects, distractor_objects, img_file, anno_file, bg_file,
     for i in xrange(len(blending_list)):
         if blending_list[i] == 'motion':
             backgrounds[i] = LinearMotionBlur3C(PIL2array3C(backgrounds[i]))
-        #result_image_filename = img_file.replace('none', blending_list[i])
         result_image_filename = img_file + str(blending_list[i]) + '.jpg'
         backgrounds[i].save(result_image_filename)
+        synthesized_images += 1
 
         image_dataset_entry = {
             "MaskPath" : mask_file,
@@ -435,9 +436,7 @@ def create_image_anno(objects, distractor_objects, img_file, anno_file, bg_file,
 
     mask_map.save(mask_file)
 
-    # with open(img_file.replace('image_none.jpg', 'labels.txt'), "w") as f:
-    #     for item in object_instances_mask_label:
-    #         f.write("%s %d\n" % (item[0], item[1]))
+    print "Produced %d images from root %s" % (synthesized_images, img_file)
 
     xmlstr = xml.dom.minidom.parseString(tostring(top)).toprettyxml(indent="    ")
     with open(anno_file, "w") as f:
@@ -516,6 +515,7 @@ def gen_syn_data(input_img_files, labels, img_dir, anno_dir, mask_dir, scale_aug
         anno_files.append(anno_file)
         mask_files.append(mask_file)
 
+    print "Setting up %d workers for synthetic image generation" %NUMBER_OF_WORKERS
     partial_func = partial(create_image_anno_wrapper, dataset_dict=dataset_dict, w=w, h=h, scale_augment=scale_augment, rotation_augment=rotation_augment, blending_list=BLENDING_LIST, dontocclude=dontocclude)
     p = Pool(NUMBER_OF_WORKERS, init_worker)
     try:
@@ -569,8 +569,6 @@ def generate_synthetic_dataset(args):
     dataset_dict = {}
     dataset_dict['Classes'] = get_labels_dict(labels)
     dataset_dict['Images'] = image_dependencies
-    #write_labels_file(args.exp, labels)
-    #write_imageset_file(args.exp, syn_img_files, anno_files)
     write_dataset_json(args.exp, dataset_dict)
 
 def parse_args():
