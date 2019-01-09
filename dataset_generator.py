@@ -578,9 +578,9 @@ def parse_args():
     '''
     parser = argparse.ArgumentParser(description="Create dataset with different augmentations")
     parser.add_argument("root",
-      help="The root directory which contains images, annotations and masks.")
+      help="The root directory which contains images of backgrounds and objects.")
     parser.add_argument("exp",
-      help="The directory where images, annotations and mask lists will be created.")
+      help="The directory where images, annotations and masks will be created.")
     parser.add_argument("--selected",
       help="Keep only selected instances in the test dataset. Default is to keep all instances in the root directory", action="store_true")
     parser.add_argument("--scale",
@@ -588,7 +588,7 @@ def parse_args():
     parser.add_argument("--rotation",
       help="Add rotation augmentation. Default is to add rotation augmentation.", action="store_false")
     parser.add_argument("--num",
-      help="Number of times each image will be in dataset", default=1, type=int)
+      help="Number of times each object image will be in dataset", default=1, type=int)
     parser.add_argument("--dontocclude",
       help="Add objects without occlusion. Default is to produce occlusions", action="store_true")
     parser.add_argument("--add_distractors",
