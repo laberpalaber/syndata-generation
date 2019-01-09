@@ -111,7 +111,7 @@ def get_mask_file(img_file):
     Returns:
         string: Correpsonding mask file path
     '''
-    mask_file = img_file.replace('.jpg','_mask.pbm')
+    mask_file = img_file.replace('.jpg','.pbm')
     return mask_file
 
 def get_labels(imgs):
@@ -270,15 +270,16 @@ def create_image_anno_wrapper(args, dataset_dict, w=WIDTH, h=HEIGHT, scale_augme
    '''
    return create_image_anno(*args, dataset_dict=dataset_dict, w=w, h=h, scale_augment=scale_augment, rotation_augment=rotation_augment, blending_list=blending_list, dontocclude=dontocclude)
 
-def create_image_anno(objects, distractor_objects, img_file, anno_file, bg_file, dataset_dict,  w=WIDTH, h=HEIGHT, scale_augment=False, rotation_augment=False, blending_list=['none'], dontocclude=False):
+def create_image_anno(objects, distractor_objects, img_file, anno_file, bg_file, mask_file, dataset_dict,  w=WIDTH, h=HEIGHT, scale_augment=False, rotation_augment=False, blending_list=['none'], dontocclude=False):
     '''Add data augmentation, synthesizes images and generates annotations according to given parameters
 
     Args:
         objects(list): List of objects whose annotations are also important
         distractor_objects(list): List of distractor objects that will be synthesized but whose annotations are not required
-        img_file(str): Image file name
+        img_file(str): Synthesized image file name
         anno_file(str): Annotation file name
-        bg_file(str): Background image path 
+        bg_file(str): Background image path
+        mask_file(str): Output mask file name
         w(int): Width of synthesized image
         h(int): Height of synthesized image
         scale_augment(bool): Add scale data augmentation
@@ -286,9 +287,6 @@ def create_image_anno(objects, distractor_objects, img_file, anno_file, bg_file,
         blending_list(list): List of blending modes to synthesize for each image
         dontocclude(bool): Generate images with occlusion
     '''
-    if 'none' not in img_file:
-        return 
-    
     print "Working on %s" % img_file
     if os.path.exists(anno_file):
         return anno_file
@@ -320,8 +318,8 @@ def create_image_anno(objects, distractor_objects, img_file, anno_file, bg_file,
            foreground = foreground.crop((xmin, ymin, xmax, ymax))
            foreground = foreground.resize((int(foreground.size[0]*source_img_scale), int(foreground.size[1]*source_img_scale)), Image.ANTIALIAS)
            orig_w, orig_h = foreground.size
-           mask_file =  get_mask_file(obj[0])
-           mask = Image.open(mask_file)
+           obj_mask_file =  get_mask_file(obj[0])
+           mask = Image.open(obj_mask_file)
            mask = mask.crop((xmin, ymin, xmax, ymax))
            mask = mask.resize(foreground.size, Image.NEAREST)
 
@@ -423,31 +421,34 @@ def create_image_anno(objects, distractor_objects, img_file, anno_file, bg_file,
     for i in xrange(len(blending_list)):
         if blending_list[i] == 'motion':
             backgrounds[i] = LinearMotionBlur3C(PIL2array3C(backgrounds[i]))
-        result_image_filename = img_file.replace('none', blending_list[i])
+        #result_image_filename = img_file.replace('none', blending_list[i])
+        result_image_filename = img_file + str(blending_list[i]) + '.jpg'
         backgrounds[i].save(result_image_filename)
 
-        # Copy the maskID entry, modify it and then copy it back into the shared dict
-        dict_entry = dataset_dict[result_image_filename]
-        for item in object_instances_mask_label:
-            dict_entry['MaskID'][item[1]] = item[0]
-        dataset_dict[result_image_filename] = dict_entry
+        image_dataset_entry = {
+            "MaskPath" : mask_file,
+            "Annotations" : anno_file,
+            "MaskID" : {item[1] : item[0] for item in object_instances_mask_label}
+        }
 
-    mask_map.save(img_file.replace('image_none.jpg', 'mask.png'))
+        dataset_dict[result_image_filename] = image_dataset_entry
 
-    with open(img_file.replace('image_none.jpg', 'labels.txt'), "w") as f:
-        for item in object_instances_mask_label:
-            f.write("%s %d\n" % (item[0], item[1]))
+    mask_map.save(mask_file)
+
+    # with open(img_file.replace('image_none.jpg', 'labels.txt'), "w") as f:
+    #     for item in object_instances_mask_label:
+    #         f.write("%s %d\n" % (item[0], item[1]))
 
     xmlstr = xml.dom.minidom.parseString(tostring(top)).toprettyxml(indent="    ")
     with open(anno_file, "w") as f:
         f.write(xmlstr)
    
-def gen_syn_data(img_files, labels, img_dir, anno_dir, mask_dir, scale_augment, rotation_augment, dontocclude, add_distractors):
+def gen_syn_data(input_img_files, labels, img_dir, anno_dir, mask_dir, scale_augment, rotation_augment, dontocclude, add_distractors):
     '''Creates list of objects and distractor objects to be pasted on what images.
        Spawns worker processes and generates images according to given params
 
     Args:
-        img_files(list): List of image files
+        input_img_files(list): List of image files (input crops)
         labels(list): List of labels for each image
         img_dir(str): Directory where synthesized images will be stored
         anno_dir(str): Directory where corresponding annotations will be stored
@@ -463,7 +464,7 @@ def gen_syn_data(img_files, labels, img_dir, anno_dir, mask_dir, scale_augment, 
     background_files = glob.glob(os.path.join(background_dir, BACKGROUND_GLOB_STRING)) * BACKGROUND_USES
    
     print "Number of background images : %s"%len(background_files) 
-    img_labels = zip(img_files, labels)
+    img_labels = zip(input_img_files, labels)
     random.shuffle(img_labels)
 
     if add_distractors:
@@ -502,22 +503,18 @@ def gen_syn_data(img_files, labels, img_dir, anno_dir, mask_dir, scale_augment, 
             print "Chosen distractor objects: %s" % distractor_objects
 
         idx += 1
+        # Select a random background for the synth image
         bg_file = random.choice(background_files)
-        for blur in BLENDING_LIST:
-            img_file = os.path.join(img_dir, '%i_image_%s.jpg'%(idx,blur))
-            anno_file = os.path.join(anno_dir, '%i.xml'%idx)
-            mask_file = os.path.join(mask_dir, '%i.png'%idx)
-            image_dependency_entry = {
-                "MaskPath":mask_file,
-                "Annotations":anno_file,
-                "MaskID":{}
-            }
-            dataset_dict[img_file] = image_dependency_entry
-            params = (objects, distractor_objects, img_file, anno_file, bg_file)
-            params_list.append(params)
-            img_files.append(img_file)
-            anno_files.append(anno_file)
-            mask_files.append(mask_file)
+
+        # Generate a root image path, an image for each blending mode will be generated later
+        img_file = os.path.join(img_dir, '%i_image_'%(idx))
+        anno_file = os.path.join(anno_dir, '%i_annotation.xml'%idx)
+        mask_file = os.path.join(mask_dir, '%i_mask.png'%idx)
+        params = (objects, distractor_objects, img_file, anno_file, bg_file, mask_file)
+        params_list.append(params)
+        img_files.append(img_file)
+        anno_files.append(anno_file)
+        mask_files.append(mask_file)
 
     partial_func = partial(create_image_anno_wrapper, dataset_dict=dataset_dict, w=w, h=h, scale_augment=scale_augment, rotation_augment=rotation_augment, blending_list=BLENDING_LIST, dontocclude=dontocclude)
     p = Pool(NUMBER_OF_WORKERS, init_worker)
@@ -550,12 +547,7 @@ def generate_synthetic_dataset(args):
     if not os.path.exists(args.exp):
         os.makedirs(args.exp)
 
-    # Create a structure with all the paths for the dataset
-    dataset_dict = {}
-    dataset_dict['Classes'] = get_labels_dict(labels)
-    
-    write_labels_file(args.exp, labels)
-
+    # Create directories
     anno_dir = os.path.join(args.exp, 'annotations')
     img_dir = os.path.join(args.exp, 'images')
     mask_dir = os.path.join(args.exp, 'masks')
@@ -565,11 +557,20 @@ def generate_synthetic_dataset(args):
         os.makedirs(img_dir)
     if not os.path.exists(os.path.join(mask_dir)):
         os.makedirs(mask_dir)
-    
-    syn_img_files, anno_files, image_dependencies = gen_syn_data(img_files, labels, img_dir, anno_dir, mask_dir, args.scale, args.rotation, args.dontocclude, args.add_distractors)
-    dataset_dict['Images'] = image_dependencies
-    write_imageset_file(args.exp, syn_img_files, anno_files)
 
+    # Synthesize the images and the references
+    syn_img_files, anno_files, image_dependencies = gen_syn_data(img_files, labels, img_dir, anno_dir, mask_dir, args.scale, args.rotation, args.dontocclude, args.add_distractors)
+
+    # Create a structure with all the dataset references
+    # The keys are
+    #   Classes - Each training class associated with an integer
+    #   Images - Contains each synthesized image path, its associated
+    #       annotation file, mask file and mask indexes
+    dataset_dict = {}
+    dataset_dict['Classes'] = get_labels_dict(labels)
+    dataset_dict['Images'] = image_dependencies
+    #write_labels_file(args.exp, labels)
+    #write_imageset_file(args.exp, syn_img_files, anno_files)
     write_dataset_json(args.exp, dataset_dict)
 
 def parse_args():
