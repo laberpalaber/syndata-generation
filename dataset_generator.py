@@ -293,6 +293,8 @@ def create_image_anno(objects, distractor_objects, img_file, anno_file, bg_file,
     
     all_objects = objects + distractor_objects
     synthesized_images = 0
+    # numbers 0 and 255 are not available for mask IDs
+    available_map_ID = range(1, 255)
     while True:
         object_instances_mask_label = []
         top = Element('annotation')
@@ -391,9 +393,11 @@ def create_image_anno(objects, distractor_objects, img_file, anno_file, bg_file,
                   backgrounds[i].paste(foreground, (x, y), Image.fromarray(cv2.blur(PIL2array1C(mask),(3,3))))
 
            # paste masks into the mask map
-           rand_color = random.randint(1, 255)
+           # make sure the same color is not selected twice
+           rand_color = random.choice(available_map_ID)
            foreground_map_color = Image.new('L', foreground.size, rand_color)
            mask_map.paste(foreground_map_color, (x, y), mask)
+           available_map_ID.remove(rand_color)
 
            # log the color and class
            object_instances_mask_label.append((obj[1], rand_color))
