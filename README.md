@@ -45,19 +45,18 @@ optional arguments:
 ```
 
 ## Training an object detector
-The code produces all the files required to train an object detector. The format is directly useful for Faster R-CNN but might be adapted for different object detectors too. The different files produced are:
-1. __labels.txt__ - Contains the labels of the objects being trained
+The code produces all the files required to train an instance detection and segmentation model such as Mask-RCNN. The different files produced are:
+1. __images/*.jpg__ - Contain image files of the synthetic scenes in JPEG format 
 2. __annotations/*.xml__ - Contains annotation files in XML format which contain bounding box annotations for various scenes
-3. __images/*.jpg__ - Contain image files of the synthetic scenes in JPEG format 
-4. __train.txt__ - Contains list of synthetic image files and corresponding annotation files
-
-There are tutorials describing how one can adapt Faster R-CNN code to run on a custom dataset like:
-1. https://github.com/rbgirshick/py-faster-rcnn/issues/243
-2. http://sgsai.blogspot.com/2016/02/training-faster-r-cnn-on-custom-dataset.html
+3. __masks/*.png__ - Contains the segmentation masks (encoded in a 8-bit greyscale image) for each object present in the synthetic scene
+4. __dataset.json__ Contains training classes (with respective labels), and an entry for each synthesized image detailing
+    - Path of the segmentation mask related to the synthetic image (field __MaskPath__)
+    - Annotations (bounding boxes) for the image (field __Annotations__)
+    - Dictionary (field __MaskID__) containing an entry for each object mask. Such entry embeds the class of the mask and the greyscale value in the .png image.
 
 ## Paper
 
-The code was used to generate synthetic scenes for the paper [Cut, Paste and Learn: Surprisingly Easy Synthesis for Instance Detection](https://arxiv.org/abs/1708.01642). 
+The original code was used to generate synthetic scenes for the paper [Cut, Paste and Learn: Surprisingly Easy Synthesis for Instance Detection](https://arxiv.org/abs/1708.01642). 
 
 If you find our code useful in your research, please consider citing:
 ```
