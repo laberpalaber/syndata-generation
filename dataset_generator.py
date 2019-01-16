@@ -270,7 +270,7 @@ def create_image_anno_wrapper(args, dataset_dict, w=WIDTH, h=HEIGHT, scale_augme
    '''
    return create_image_anno(*args, dataset_dict=dataset_dict, w=w, h=h, scale_augment=scale_augment, rotation_augment=rotation_augment, blending_list=blending_list, dontocclude=dontocclude)
 
-def create_image_anno(objects, distractor_objects, img_file, anno_file, bg_file, mask_file, dataset_dict,  w=WIDTH, h=HEIGHT, scale_augment=False, rotation_augment=False, blending_list=['none'], dontocclude=False):
+def create_image_anno(objects, distractor_objects, img_file, anno_file, bg_file, mask_file, root_dataset_dir, dataset_dict,  w=WIDTH, h=HEIGHT, scale_augment=False, rotation_augment=False, blending_list=['none'], dontocclude=False):
     '''Add data augmentation, synthesizes images and generates annotations according to given parameters
 
     Args:
@@ -427,7 +427,7 @@ def create_image_anno(objects, distractor_objects, img_file, anno_file, bg_file,
         if blending_list[i] == 'motion':
             backgrounds[i] = LinearMotionBlur3C(PIL2array3C(backgrounds[i]))
         result_image_filename = img_file + str(blending_list[i]) + '.jpg'
-        backgrounds[i].save(result_image_filename)
+        backgrounds[i].save(os.path.join(root_dataset_dir, result_image_filename))
         synthesized_images += 1
 
         image_dataset_entry = {
@@ -438,15 +438,15 @@ def create_image_anno(objects, distractor_objects, img_file, anno_file, bg_file,
 
         dataset_dict[result_image_filename] = image_dataset_entry
 
-    mask_map.save(mask_file)
+    mask_map.save(os.path.join(root_dataset_dir, mask_file))
 
     print "Produced %d images from root %s" % (synthesized_images, img_file)
 
     xmlstr = xml.dom.minidom.parseString(tostring(top)).toprettyxml(indent="    ")
-    with open(anno_file, "w") as f:
+    with open(os.path.join(root_dataset_dir, anno_file), "w") as f:
         f.write(xmlstr)
    
-def gen_syn_data(input_img_files, labels, img_dir, anno_dir, mask_dir, scale_augment, rotation_augment, dontocclude, add_distractors):
+def gen_syn_data(input_img_files, labels, root_dataset_dir, img_dir, anno_dir, mask_dir, scale_augment, rotation_augment, dontocclude, add_distractors):
     '''Creates list of objects and distractor objects to be pasted on what images.
        Spawns worker processes and generates images according to given params
 
@@ -513,7 +513,7 @@ def gen_syn_data(input_img_files, labels, img_dir, anno_dir, mask_dir, scale_aug
         img_file = os.path.join(img_dir, '%i_image_'%(idx))
         anno_file = os.path.join(anno_dir, '%i_annotation.xml'%idx)
         mask_file = os.path.join(mask_dir, '%i_mask.png'%idx)
-        params = (objects, distractor_objects, img_file, anno_file, bg_file, mask_file)
+        params = (objects, distractor_objects, img_file, anno_file, bg_file, mask_file, root_dataset_dir)
         params_list.append(params)
         img_files.append(img_file)
         anno_files.append(anno_file)
@@ -555,15 +555,19 @@ def generate_synthetic_dataset(args):
     anno_dir = os.path.join(args.exp, 'annotations')
     img_dir = os.path.join(args.exp, 'images')
     mask_dir = os.path.join(args.exp, 'masks')
-    if not os.path.exists(os.path.join(anno_dir)):
+    if not os.path.exists(anno_dir):
         os.makedirs(anno_dir)
-    if not os.path.exists(os.path.join(img_dir)):
+    if not os.path.exists(img_dir):
         os.makedirs(img_dir)
-    if not os.path.exists(os.path.join(mask_dir)):
+    if not os.path.exists(mask_dir):
         os.makedirs(mask_dir)
 
+    anno_dir = 'annotations'
+    img_dir = 'images'
+    mask_dir = 'masks'
+
     # Synthesize the images and the references
-    syn_img_files, anno_files, image_dependencies = gen_syn_data(img_files, labels, img_dir, anno_dir, mask_dir, args.scale, args.rotation, args.dontocclude, args.add_distractors)
+    syn_img_files, anno_files, image_dependencies = gen_syn_data(img_files, labels, args.exp, img_dir, anno_dir, mask_dir, args.scale, args.rotation, args.dontocclude, args.add_distractors)
 
     # Create a structure with all the dataset references
     # The keys are
