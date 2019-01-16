@@ -336,7 +336,8 @@ def create_image_anno(objects, distractor_objects, img_file, anno_file, bg_file,
                     if  w-o_w > 0 and h-o_h > 0 and o_w > 0 and o_h > 0:
                         break
                 foreground = foreground.resize((o_w, o_h), Image.ANTIALIAS)
-                mask = mask.resize((o_w, o_h), Image.ANTIALIAS)
+                # mask = mask.resize((o_w, o_h), Image.ANTIALIAS)
+                mask = mask.resize((o_w, o_h), Image.NEAREST)
            if rotation_augment:
                max_degrees = MAX_DEGREES  
                while True:
@@ -438,7 +439,7 @@ def create_image_anno(objects, distractor_objects, img_file, anno_file, bg_file,
 
         dataset_dict[result_image_filename] = image_dataset_entry
 
-    mask_map.save(os.path.join(root_dataset_dir, mask_file))
+    mask_map.save(os.path.join(root_dataset_dir, mask_file), compression=0)
 
     print "Produced %d images from root %s" % (synthesized_images, img_file)
 
