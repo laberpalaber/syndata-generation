@@ -1,2 +1,10 @@
-honey_bunches
-mahatma_rice
+banana
+chips_can
+mini_soccer_ball
+mug
+mustard_bottle
+pear
+potted_meat_can
+power_drill
+rubiks_cube
+subar_box
