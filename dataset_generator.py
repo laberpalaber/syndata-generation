@@ -585,7 +585,7 @@ def parse_args():
     '''
     parser = argparse.ArgumentParser(description="Create dataset with different augmentations")
     parser.add_argument("root",
-      help="The root directory which contains images of backgrounds and objects.")
+      help="The root directory which contains objects images and masks.")
     parser.add_argument("exp",
       help="The directory where images, annotations and masks will be created.")
     parser.add_argument("--selected",
