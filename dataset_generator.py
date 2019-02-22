@@ -369,7 +369,6 @@ def create_image_anno(objects, distractor_objects, img_file, anno_file, bg_file,
                     if  w-o_w > 0 and h-o_h > 0 and o_w > 0 and o_h > 0:
                         break
                 foreground = foreground.resize((o_w, o_h), Image.ANTIALIAS)
-                # mask = mask.resize((o_w, o_h), Image.ANTIALIAS)
                 mask = mask.resize((o_w, o_h), Image.NEAREST)
            if rotation_augment:
                max_degrees = MAX_DEGREES  
@@ -426,6 +425,12 @@ def create_image_anno(objects, distractor_objects, img_file, anno_file, bg_file,
                elif blending_list[i] == 'box':
                   backgrounds[i].paste(foreground, (x, y), Image.fromarray(cv2.blur(PIL2array1C(mask),(3,3))))
 
+           # if the object is a distractor, no need to log it as an instance, and the mask must be background
+           if idx >= len(objects):
+               foreground_map_color = Image.new('L', foreground.size, 0)
+               mask_map.paste(foreground_map_color, (x, y), mask)
+               continue
+
            # paste masks into the mask map
            # make sure the same color is not selected twice
            rand_color = random.choice(available_map_ID)
@@ -436,8 +441,6 @@ def create_image_anno(objects, distractor_objects, img_file, anno_file, bg_file,
            # log the color and class
            object_instances_mask_label.append((obj[1], rand_color))
 
-           if idx >= len(objects):
-               continue 
            object_root = SubElement(top, 'object')
            object_type = obj[1]
            object_type_entry = SubElement(object_root, 'name')
