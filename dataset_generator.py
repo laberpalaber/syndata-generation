@@ -208,6 +208,39 @@ def write_dataset_json(exp_dir, dataset_dict):
     with open(os.path.join(exp_dir,'dataset.json'), 'w') as f:
         json.dump(jsonFormatDataset, f)
 
+def write_dataset_info(objects, distractors, backgrounds, scale_augment, rotation_augment, root_dataset_dir):
+    '''Writes information relative to the dataset generation to a .txt file
+    Args:
+        objects: list of objects
+        distractors: list of distractor objects
+        backgrounds: list of background images
+        scale_augment: parameter denoting whether scale augmentation is being applied
+        rotation_augment: parameter denoting whether rotation augmentation is being applied
+        root_dataset_dir: path to the root directory of the generated dataset
+    '''
+
+    info_filename = os.path.join(root_dataset_dir, "info.py")
+    with (open(info_filename, "w")) as info_file:
+
+        info_file.write("#DATASET GENERATION INFO\n\n")
+
+        # Write list of objects in txt file
+        info_file.write("OBJECTS = " + str(objects) + "\n")
+
+        # Write list of distractors in txt file
+        info_file.write("DISTRACTORS = " + str(distractors) + "\n")
+
+        # Write number of background files
+        info_file.write("NO_OF_BACKGROUND_IMAGES = " + str(len(backgrounds)) + "\n\n")
+
+        # Write list of generation parameters
+        config_file = open("defaults.py")
+        config_str = config_file.read()
+        info_file.write(config_str)
+
+        info_file.write("AUGMENT_ROTATION = " + str(rotation_augment) + "\n")
+        info_file.write("AUGMENT_SCALE = " + str(scale_augment))
+
 def get_labels_dict(labels):
     '''Writes the labels in a dictionary and returns it
 
@@ -552,6 +585,15 @@ def generate_synthetic_dataset(args):
     if not os.path.exists(args.exp):
         os.makedirs(args.exp)
 
+    if args.add_distractors:
+        with open(DISTRACTOR_LIST_FILE) as f:
+            distractor_labels = [x.strip() for x in f.readlines()]
+    else:
+        distractor_labels = []
+
+    with open(SELECTED_LIST_FILE) as f:
+        object_labels = [x.strip() for x in f.readlines()]
+
     # Create directories
     anno_dir = os.path.join(args.exp, 'annotations')
     img_dir = os.path.join(args.exp, 'images')
@@ -579,6 +621,10 @@ def generate_synthetic_dataset(args):
     dataset_dict['Classes'] = get_labels_dict(labels)
     dataset_dict['Images'] = image_dependencies
     write_dataset_json(args.exp, dataset_dict)
+
+    # Write information about how the dataset was generated
+    background_images = [bkg_filename for bkg_filename in os.listdir(BACKGROUND_DIR) if os.path.isfile(os.path.join(BACKGROUND_DIR, bkg_filename))]
+    write_dataset_info(object_labels, distractor_labels, background_images, args.scale, args.rotation, args.exp)
 
 def parse_args():
     '''Parse input arguments
