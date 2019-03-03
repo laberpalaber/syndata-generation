@@ -334,6 +334,8 @@ def create_image_anno(objects, distractor_objects, img_file, anno_file, bg_file,
         background = Image.open(bg_file)
         background = background.resize((w, h), Image.ANTIALIAS)
         backgrounds = []
+        #TODO: fix this hack to downsize blending list choice!
+        blending_list = [random.choice(blending_list)]
         for i in xrange(len(blending_list)):
             backgrounds.append(background.copy())
 
@@ -352,7 +354,7 @@ def create_image_anno(objects, distractor_objects, img_file, anno_file, bg_file,
            if xmin == -1 or ymin == -1 or xmax-xmin < MIN_WIDTH or ymax-ymin < MIN_HEIGHT :
                continue
            foreground = foreground.crop((xmin, ymin, xmax, ymax))
-           foreground = foreground.resize((int(foreground.size[0]*source_img_scale), int(foreground.size[1]*source_img_scale)), Image.ANTIALIAS)
+           foreground = foreground.resize((int(foreground.size[0]*source_img_scale), int(foreground.size[1]*source_img_scale)), Image.BILINEAR)
            orig_w, orig_h = foreground.size
            obj_mask_file =  get_mask_file(obj[0])
            mask = Image.open(obj_mask_file)
