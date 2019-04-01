@@ -354,24 +354,27 @@ def create_image_anno(objects, distractor_objects, img_file, anno_file, bg_file,
            if xmin == -1 or ymin == -1 or xmax-xmin < MIN_WIDTH or ymax-ymin < MIN_HEIGHT :
                continue
            foreground = foreground.crop((xmin, ymin, xmax, ymax))
-           foreground = foreground.resize((int(foreground.size[0]*source_img_scale), int(foreground.size[1]*source_img_scale)), Image.BILINEAR)
-           orig_w, orig_h = foreground.size
+           # Just log the dimensions the foreground crop should be resized at. Will perform resizing just once,
+           # after augmentation
+           orig_w = foreground.size[0] * source_img_scale
+           orig_h = foreground.size[1] * source_img_scale
            obj_mask_file =  get_mask_file(obj[0])
            mask = Image.open(obj_mask_file)
            mask = mask.crop((xmin, ymin, xmax, ymax))
-           mask = mask.resize(foreground.size, Image.NEAREST)
 
            if INVERTED_MASK:
                mask = Image.fromarray(255-PIL2array1C(mask))
            o_w, o_h = orig_w, orig_h
            if scale_augment:
-                while True:
-                    scale = random.uniform(MIN_SCALE, MAX_SCALE)
-                    o_w, o_h = int(scale*orig_w), int(scale*orig_h)
-                    if  w-o_w > 0 and h-o_h > 0 and o_w > 0 and o_h > 0:
-                        break
-                foreground = foreground.resize((o_w, o_h), Image.ANTIALIAS)
-                mask = mask.resize((o_w, o_h), Image.NEAREST)
+               while True:
+                   scale = random.uniform(MIN_SCALE, MAX_SCALE)
+                   o_w, o_h = int(scale*orig_w), int(scale*orig_h)
+                   if  w-o_w > 0 and h-o_h > 0 and o_w > 0 and o_h > 0:
+                       break
+           # Resize the image and mask only once (to avoid losing clarity)
+           foreground = foreground.resize((int(o_w), int(o_h)), Image.ANTIALIAS)
+           mask = mask.resize((int(o_w), int(o_h)), Image.NEAREST)
+
            if rotation_augment:
                max_degrees = MAX_DEGREES  
                while True:
