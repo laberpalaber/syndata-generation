@@ -645,9 +645,9 @@ def parse_args():
     parser.add_argument("--selected",
       help="Keep only selected instances in the test dataset. Default is to keep all instances in the root directory", action="store_true")
     parser.add_argument("--scale",
-      help="Add scale augmentation. Default is to add scale augmentation.", action="store_false")
+      help="Add scale augmentation. Default is to add scale augmentation.", action="store_true")
     parser.add_argument("--rotation",
-      help="Add rotation augmentation. Default is to add rotation augmentation.", action="store_false")
+      help="Add rotation augmentation. Default is to add rotation augmentation.", action="store_true")
     parser.add_argument("--num",
       help="Number of times each object image will be in dataset", default=1, type=int)
     parser.add_argument("--dontocclude",
