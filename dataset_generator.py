@@ -328,143 +328,153 @@ def create_image_anno(objects, distractor_objects, img_file, anno_file, bg_file,
     synthesized_images = 0
     # numbers 0 and 255 are not available for mask IDs
     available_map_ID = range(1, 255)
-    while True:
-        object_instances_mask_label = []
-        top = Element('annotation')
-        background = Image.open(bg_file)
-        background = background.resize((w, h), Image.ANTIALIAS)
-        backgrounds = []
-        #TODO: fix this hack to downsize blending list choice!
-        blending_list = [random.choice(blending_list)]
-        for i in xrange(len(blending_list)):
-            backgrounds.append(background.copy())
 
-        # create a mask map for every image to synthesize
-        # masks are not RGB but 8-bit images
-        mask_map = Image.new('L', (w,h), color=0)
-        
-        if dontocclude:
-            already_syn = []
-        for idx, obj in enumerate(all_objects):
-           foreground = Image.open(obj[0])
-           # measure relative size difference between the background image and the source image
-           # accounting for width. Height might be used as well
-           source_img_scale = float(w) / foreground.size[0]
-           xmin, xmax, ymin, ymax = get_annotation_from_mask_file(get_mask_file(obj[0]))
-           if xmin == -1 or ymin == -1 or xmax-xmin < MIN_WIDTH or ymax-ymin < MIN_HEIGHT :
-               continue
-           foreground = foreground.crop((xmin, ymin, xmax, ymax))
-           # Just log the dimensions the foreground crop should be resized at. Will perform resizing just once,
-           # after augmentation
-           orig_w = foreground.size[0] * source_img_scale
-           orig_h = foreground.size[1] * source_img_scale
-           obj_mask_file =  get_mask_file(obj[0])
-           mask = Image.open(obj_mask_file)
-           mask = mask.crop((xmin, ymin, xmax, ymax))
+    object_instances_mask_label = []
+    top = Element('annotation')
+    background = Image.open(bg_file)
+    background = background.resize((w, h), Image.ANTIALIAS)
+    backgrounds = []
+    #TODO: fix this hack to downsize blending list choice!
+    blending_list = [random.choice(blending_list)]
+    for i in xrange(len(blending_list)):
+        backgrounds.append(background.copy())
 
-           if INVERTED_MASK:
-               mask = Image.fromarray(255-PIL2array1C(mask))
-           o_w, o_h = orig_w, orig_h
-           if scale_augment:
-               while True:
-                   scale = random.uniform(MIN_SCALE, MAX_SCALE)
-                   o_w, o_h = int(scale*orig_w), int(scale*orig_h)
-                   if  w-o_w > 0 and h-o_h > 0 and o_w > 0 and o_h > 0:
-                       break
-           # Resize the image and mask only once (to avoid losing clarity)
-           foreground = foreground.resize((int(o_w), int(o_h)), Image.ANTIALIAS)
-           mask = mask.resize((int(o_w), int(o_h)), Image.NEAREST)
+    # create a mask map for every image to synthesize
+    # masks are not RGB but 8-bit images
+    mask_map = Image.new('L', (w,h), color=0)
 
-           if rotation_augment:
-               max_degrees = MAX_DEGREES  
-               while True:
-                   rot_degrees = random.randint(-max_degrees, max_degrees)
-                   foreground_tmp = foreground.rotate(rot_degrees, expand=True)
-                   mask_tmp = mask.rotate(rot_degrees, expand=True)
-                   o_w, o_h = foreground_tmp.size
-                   if  w-o_w > 0 and h-o_h > 0:
+    if dontocclude:
+        already_syn = []
+    for idx, obj in enumerate(all_objects):
+        foreground = Image.open(obj[0])
+        # measure relative size difference between the background image and the source image
+        # accounting for width. Height might be used as well
+        source_img_scale = float(w) / foreground.size[0]
+        xmin, xmax, ymin, ymax = get_annotation_from_mask_file(get_mask_file(obj[0]))
+        if xmin == -1 or ymin == -1 or xmax-xmin < MIN_WIDTH or ymax-ymin < MIN_HEIGHT :
+            continue
+        foreground = foreground.crop((xmin, ymin, xmax, ymax))
+        # Just log the dimensions the foreground crop should be resized at. Will perform resizing just once,
+        # after augmentation
+        orig_w = foreground.size[0] * source_img_scale
+        orig_h = foreground.size[1] * source_img_scale
+        obj_mask_file =  get_mask_file(obj[0])
+        mask = Image.open(obj_mask_file)
+        mask = mask.crop((xmin, ymin, xmax, ymax))
+
+        if INVERTED_MASK:
+            mask = Image.fromarray(255-PIL2array1C(mask))
+        o_w, o_h = orig_w, orig_h
+        if scale_augment:
+            while True:
+                scale = random.uniform(MIN_SCALE, MAX_SCALE)
+                o_w, o_h = int(scale*orig_w), int(scale*orig_h)
+                if  w-o_w > 0 and h-o_h > 0 and o_w > 0 and o_h > 0:
+                    break
+        # Resize the image and mask only once (to avoid losing clarity)
+        foreground = foreground.resize((int(o_w), int(o_h)), Image.ANTIALIAS)
+        mask = mask.resize((int(o_w), int(o_h)), Image.NEAREST)
+
+        if rotation_augment:
+            max_degrees = MAX_DEGREES
+            while True:
+                rot_degrees = random.randint(-max_degrees, max_degrees)
+                foreground_tmp = foreground.rotate(rot_degrees, expand=True)
+                mask_tmp = mask.rotate(rot_degrees, expand=True)
+                o_w, o_h = foreground_tmp.size
+                if  w-o_w > 0 and h-o_h > 0:
+                    break
+            mask = mask_tmp
+            foreground = foreground_tmp
+        xmin, xmax, ymin, ymax = get_annotation_from_mask(mask)
+        attempt = 0
+
+        # find a suitable spot for the crop in the destination image
+        # we look for such a space in the user-defined region, if there is none we look in the whole image
+        # try to place each one for a max number of times, then scrap the instance
+        found = False
+
+        while attempt < MAX_ATTEMPTS_TO_SYNTHESIZE:
+            # place the crop somewhere in a rectangular zone at the center of the image
+            x = random.randint(int(-MAX_TRUNCATION_FRACTION*o_w + MIN_X_POSITION),
+                               int(MAX_X_POSITION-o_w+MAX_TRUNCATION_FRACTION*o_w))
+            y = random.randint(int(-MAX_TRUNCATION_FRACTION*o_h + MIN_Y_POSITION),
+                               int(MAX_Y_POSITION-o_h+MAX_TRUNCATION_FRACTION*o_h))
+            attempt += 1
+            if not(dontocclude):
+                # if we accept occlusion, there is no need to iterate trying to find unoccluded spots
+                found = True
+                break
+            else:
+                # if we don't accept occlusion, look for a suitable space until we run out of trials or we find one
+                found = True
+                for prev in already_syn:
+                    ra = Rectangle(prev[0], prev[2], prev[1], prev[3])
+                    rb = Rectangle(x+xmin, y+ymin, x+xmax, y+ymax)
+                    if overlap(ra, rb):
+                        found = False
                         break
-               mask = mask_tmp
-               foreground = foreground_tmp
-           xmin, xmax, ymin, ymax = get_annotation_from_mask(mask)
-           attempt = 0
 
-           while attempt < MAX_ATTEMPTS_TO_SYNTHESIZE:
-               # place the crop somewhere in a rectangular zone at the center of the image
-               x = random.randint(int(-MAX_TRUNCATION_FRACTION*o_w + MIN_X_POSITION), int(MAX_X_POSITION-o_w+MAX_TRUNCATION_FRACTION*o_w))
-               y = random.randint(int(-MAX_TRUNCATION_FRACTION*o_h + MIN_Y_POSITION), int(MAX_Y_POSITION-o_h+MAX_TRUNCATION_FRACTION*o_h))
-               attempt += 1
-               if not(dontocclude):
-                   # if we accept occlusion, there is no need to iterate trying to find unoccluded spots
-                   break
-               else:
-                   # if we don't, look for a suitable space until we run out of trials or we find one
-                   found = True
-                   for prev in already_syn:
-                       ra = Rectangle(prev[0], prev[2], prev[1], prev[3])
-                       rb = Rectangle(x+xmin, y+ymin, x+xmax, y+ymax)
-                       if overlap(ra, rb):
-                             found = False
-                             break
-                   if found:
-                      break
-           if dontocclude:
-               already_syn.append([x+xmin, x+xmax, y+ymin, y+ymax])
-           # paste foreground patch onto background and apply any blending transform if requested
-           for i in xrange(len(blending_list)):
-               if blending_list[i] == 'none' or blending_list[i] == 'motion':
-                   backgrounds[i].paste(foreground, (x, y), mask)
-               elif blending_list[i] == 'poisson':
-                  offset = (y, x)
-                  img_mask = PIL2array1C(mask)
-                  img_src = PIL2array3C(foreground).astype(np.float64)
-                  img_target = PIL2array3C(backgrounds[i])
-                  img_mask, img_src, offset_adj \
-                       = create_mask(img_mask.astype(np.float64),
-                          img_target, img_src, offset=offset)
-                  background_array = poisson_blend(img_mask, img_src, img_target,
-                                    method='normal', offset_adj=offset_adj)
-                  backgrounds[i] = Image.fromarray(background_array, 'RGB') 
-               elif blending_list[i] == 'gaussian':
-                  backgrounds[i].paste(foreground, (x, y), Image.fromarray(cv2.GaussianBlur(PIL2array1C(mask),(5,5),2)))
-               elif blending_list[i] == 'box':
-                  backgrounds[i].paste(foreground, (x, y), Image.fromarray(cv2.blur(PIL2array1C(mask),(3,3))))
+        # if maximum number of attempts of placing an object is reached without finding a suitable position, the
+        # instance is dropped
+        if (attempt == MAX_ATTEMPTS_TO_SYNTHESIZE) and not found:
+            continue
 
-           # if the object is a distractor, no need to log it as an instance, and the mask must be background
-           if idx >= len(objects):
-               foreground_map_color = Image.new('L', foreground.size, 0)
-               mask_map.paste(foreground_map_color, (x, y), mask)
-               continue
+        # log position of the crop
+        if dontocclude:
+            already_syn.append([x+xmin, x+xmax, y+ymin, y+ymax])
+        # paste foreground patch onto background and apply any blending transform if requested
+        for i in xrange(len(blending_list)):
+            if blending_list[i] == 'none' or blending_list[i] == 'motion':
+                backgrounds[i].paste(foreground, (x, y), mask)
+            elif blending_list[i] == 'poisson':
+                offset = (y, x)
+                img_mask = PIL2array1C(mask)
+                img_src = PIL2array3C(foreground).astype(np.float64)
+                img_target = PIL2array3C(backgrounds[i])
+                img_mask, img_src, offset_adj \
+                    = create_mask(img_mask.astype(np.float64),
+                                  img_target, img_src, offset=offset)
+                background_array = poisson_blend(img_mask, img_src, img_target,
+                                                 method='normal', offset_adj=offset_adj)
+                backgrounds[i] = Image.fromarray(background_array, 'RGB')
+            elif blending_list[i] == 'gaussian':
+                backgrounds[i].paste(foreground, (x, y), Image.fromarray(cv2.GaussianBlur(PIL2array1C(mask),(5,5),2)))
+            elif blending_list[i] == 'box':
+                backgrounds[i].paste(foreground, (x, y), Image.fromarray(cv2.blur(PIL2array1C(mask),(3,3))))
 
-           # paste masks into the mask map
-           # make sure the same color is not selected twice
-           rand_color = random.choice(available_map_ID)
-           foreground_map_color = Image.new('L', foreground.size, rand_color)
-           mask_map.paste(foreground_map_color, (x, y), mask)
-           available_map_ID.remove(rand_color)
+        # if the object is a distractor, no need to log it as an instance, and the mask must be background
+        if idx >= len(objects):
+            foreground_map_color = Image.new('L', foreground.size, 0)
+            mask_map.paste(foreground_map_color, (x, y), mask)
+            continue
 
-           # log the color and class
-           object_instances_mask_label.append((obj[1], rand_color))
+        # paste masks into the mask map
+        # make sure the same color is not selected twice
+        rand_color = random.choice(available_map_ID)
+        foreground_map_color = Image.new('L', foreground.size, rand_color)
+        mask_map.paste(foreground_map_color, (x, y), mask)
+        available_map_ID.remove(rand_color)
 
-           object_root = SubElement(top, 'object')
-           object_type = obj[1]
-           object_type_entry = SubElement(object_root, 'name')
-           object_type_entry.text = str(object_type)
-           object_bndbox_entry = SubElement(object_root, 'bndbox')
-           x_min_entry = SubElement(object_bndbox_entry, 'xmin')
-           x_min_entry.text = '%d'%(max(1,x+xmin))
-           x_max_entry = SubElement(object_bndbox_entry, 'xmax')
-           x_max_entry.text = '%d'%(min(w,x+xmax))
-           y_min_entry = SubElement(object_bndbox_entry, 'ymin')
-           y_min_entry.text = '%d'%(max(1,y+ymin))
-           y_max_entry = SubElement(object_bndbox_entry, 'ymax')
-           y_max_entry.text = '%d'%(min(h,y+ymax))
-           difficult_entry = SubElement(object_root, 'difficult')
-           difficult_entry.text = '0' # Add heuristic to estimate difficulty later on
-        if attempt == MAX_ATTEMPTS_TO_SYNTHESIZE:
-           continue
-        else:
-           break
+        # log the color and class
+        object_instances_mask_label.append((obj[1], rand_color))
+
+        object_root = SubElement(top, 'object')
+        object_type = obj[1]
+        object_type_entry = SubElement(object_root, 'name')
+        object_type_entry.text = str(object_type)
+        object_bndbox_entry = SubElement(object_root, 'bndbox')
+        x_min_entry = SubElement(object_bndbox_entry, 'xmin')
+        x_min_entry.text = '%d'%(max(1,x+xmin))
+        x_max_entry = SubElement(object_bndbox_entry, 'xmax')
+        x_max_entry.text = '%d'%(min(w,x+xmax))
+        y_min_entry = SubElement(object_bndbox_entry, 'ymin')
+        y_min_entry.text = '%d'%(max(1,y+ymin))
+        y_max_entry = SubElement(object_bndbox_entry, 'ymax')
+        y_max_entry.text = '%d'%(min(h,y+ymax))
+        difficult_entry = SubElement(object_root, 'difficult')
+        difficult_entry.text = '0' # Add heuristic to estimate difficulty later on
+
     for i in xrange(len(blending_list)):
         if blending_list[i] == 'motion':
             backgrounds[i] = LinearMotionBlur3C(PIL2array3C(backgrounds[i]))
