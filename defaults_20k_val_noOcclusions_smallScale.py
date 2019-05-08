@@ -1,9 +1,9 @@
 # Paths
 # Fill this according to own setup
 # Training
-BACKGROUND_DIR = 'demo_data_dir/backgrounds_train_20k/'
+#BACKGROUND_DIR = 'demo_data_dir/backgrounds_train_20k/'
 # Validation
-#BACKGROUND_DIR = 'demo_data_dir/backgrounds_val_20k/'
+BACKGROUND_DIR = 'demo_data_dir/backgrounds_val_20k/'
 BACKGROUND_GLOB_STRING = '*.jpg'
 POISSON_BLENDING_DIR = ''
 SELECTED_LIST_FILE = 'demo_data_dir/selected.txt'

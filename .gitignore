@@ -91,3 +91,8 @@ ENV/
 # Images
 output_dir/
 demo_data_dir/
+
+/*dataset_*
+/Trash
+/YCB_Video_Dataset
+/YCB_video_inCOCO

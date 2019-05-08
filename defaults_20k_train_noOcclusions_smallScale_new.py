@@ -13,7 +13,7 @@ DISTRACTOR_GLOB_STRING = '*.jpg'
 INVERTED_MASK = True # Set to true if white pixels represent background
 
 # Parameters for generator
-NUMBER_OF_WORKERS = 50
+NUMBER_OF_WORKERS = 20
 BLENDING_LIST = ['gaussian','poisson', 'none', 'box', 'motion']
 #BLENDING_LIST = ['none', 'gaussian']
 
@@ -28,8 +28,8 @@ MAX_ATTEMPTS_TO_SYNTHESIZE = 200
 BACKGROUND_USES = 4
 
 # Parameters for objects in images
-MIN_SCALE = 0.8 # min scale for scale augmentation
-MAX_SCALE = 1.3 # max scale for scale augmentation
+MIN_SCALE = 0.7 # min scale for scale augmentation
+MAX_SCALE = 1.1 # max scale for scale augmentation
 MAX_DEGREES = 360 # max rotation allowed during rotation augmentation
 MAX_TRUNCATION_FRACTION = 0.3 # max fraction to be truncated = MAX_TRUNCACTION_FRACTION*(WIDTH/HEIGHT)
 MAX_ALLOWED_IOU = 0.3 # IOU > MAX_ALLOWED_IOU is considered an occlusion (default 0.75)

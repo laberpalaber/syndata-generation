@@ -15,8 +15,13 @@ import signal
 import time
 import json
 
+# Take default values from default file, POISSON_BLENDING_DIR, WIDTH and HEIGHTS
+#POISSON_BLENDING_DIR = ''
+#WIDTH = 640
+#HEIGHT = 480
 from defaults import *
 sys.path.insert(0, POISSON_BLENDING_DIR)
+
 from pb import *
 import math
 from pyblur import *
@@ -204,9 +209,9 @@ def write_dataset_json(exp_dir, dataset_dict):
                          files will be stored
         dataset_dict(dict): Dictionary where object dependencies and mask IDs are stored
     '''
-    jsonFormatDataset = json.dumps(dataset_dict)
+    #jsonFormatDataset = json.dumps(dataset_dict)
     with open(os.path.join(exp_dir,'dataset.json'), 'w') as f:
-        json.dump(jsonFormatDataset, f)
+        json.dump(dataset_dict, f)
 
 def write_dataset_info(objects, distractors, backgrounds, scale_augment, rotation_augment, root_dataset_dir):
     '''Writes information relative to the dataset generation to a .txt file
@@ -234,7 +239,8 @@ def write_dataset_info(objects, distractors, backgrounds, scale_augment, rotatio
         info_file.write("NO_OF_BACKGROUND_IMAGES = " + str(len(backgrounds)) + "\n\n")
 
         # Write list of generation parameters
-        config_file = open("defaults.py")
+        #config_file = open("defaults.py")
+        config_file = open(args.settings)        
         config_str = config_file.read()
         info_file.write(config_str)
 
@@ -652,6 +658,8 @@ def parse_args():
       help="The root directory which contains objects images and masks.")
     parser.add_argument("exp",
       help="The directory where images, annotations and masks will be created.")
+    parser.add_argument("settings",
+      help="Name of the defaults.py in the current directory that shall be used")
     parser.add_argument("--selected",
       help="Keep only selected instances in the test dataset. Default is to keep all instances in the root directory", action="store_true")
     parser.add_argument("--scale",
@@ -669,4 +677,14 @@ def parse_args():
 
 if __name__ == '__main__':
     args = parse_args()
+    print args.settings
+    m = __import__(args.settings.replace('.py', ''))
+    # This is not the preferred way, the variables should be accessed using m.VARIABLE_NAME and then this try: except can be avoided
+    try:
+        attrlist = m.__all__
+    except AttributeError:
+        attrlist = dir (m)
+    for attr in attrlist:
+        globals()[attr] = getattr (m, attr)
     generate_synthetic_dataset(args)
+

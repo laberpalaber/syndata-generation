@@ -1,0 +1,66 @@
+# Python scripts
+* Dataset generation
+	* dataset_generator.py: script to generate the synthetic dataset
+	* pb.py : needed for the poisson blending
+* Dataset conversion
+* To Binary
+	* convert_folderYCB_to_binary.py: From the folder in YCB Video /data create two new folder 1) IMAGE_DIR containing all the color images and 2) OUTPUT_DIR containing the created binary masks
+		* read_mat_file.py: mat files are read to find out which classes are present in the current image
+	* convert_dataset_to_binary.py: Script that reads the .json file (given as argument) and converts the graylevel masks to binary masks (one for each object).
+* To COCO annotation format
+	* ycb_to_coco_parallel_py2.py: reads the binary annotations masks in ANNOTATION_DIR and creates a .json file in the COCO format. Adapted to the synthetic datasets created using syndata-generation (https://github.com/fbottarel/syndata-generation). Annotations need to be converted to binary masks by using convert_dataset_to_binary.py. Note: Make sure to adapt to your version of python and your objects
+
+# Bashscripts
+The following scripts and .txt are available:
+In syndata-generation:
+* YCB Video:
+	* Conversion YCB Video to Binary
+		* convertYCBtoBinary.sh: BASH script to generate binary masks for all folders in ycb_video_data_path and saves in folders in target_dir
+		* convertYCBtoBinary_selectedFolders.sh: BASH script to generate binary masks for  for the folders specified in selected.txt (relative to ycb_video_data_path) and saves in folders in target_dir
+	* Conversion YCB Video Binary to COCO
+		* convertYCB_BinarytoCOCO_selectedFolders.sh: BASH script to generate the COCO conform .json from the binary images for the folders specified in selected.txt (relative to ycb_video_path) 
+	* Conversion YCB Video to Binary and then to COCO
+		* convertYCBVideotoCOCO_selectedFolders.sh: BASH script that generates binary masks for the specified folders in ycb_video_data_path and saves them in folders in target_dir. Next images are renamed to replace - with _ and then the .json in COCO annotation format is created.
+
+* Synthetic dataset: BASH scripts to generate training and validation sets using the synthetic dataset generator as well as a .json file containing the annotations in COCO format. Difference is the order of execution
+	* convTrainValToCoco.sh
+	* trainGenerConvToCoco
+
+* selected_folders.txt: folders of YCB video that shall be converted to binary/ to COCO annotations
+
+
+In demo_data_dir:
+* createBackgroundCollection.sh : BASH script to generate a folder containing all backgrounds (symlinks) you specify
+	* selected_backgrounds_val_20k.txt : List of backgrounds used for the validation set
+	* selected_backgrounds_train_20k.txt : List of backgrounds used for the training set
+* db_20k.sh : BASH script used to split the YCB object directory tree into the train and validation sets for the 20k dataset
+
+# Datasets
+The following datasets have been created:
+* dataset_sanity_train & dataset_sanity_test: Dataset used for the sanity test, 3 objects, 60 backgrounds, the backgrounds were randomly divided into training and validation and only a small amount of frames per object was used
+* 20k datasets: Backgrounds were divided using the createBackgroundCollection script. s2_desk and s10_chair_red were used for validation, the rest for training. The object frames were split using db_20k.sh, namely taking every 10th frame for validation.
+	* dataset_20k_train & dataset_20k_val: 20 YCB video objects (without wood block) and scale and rotation augmentation
+	* dataset_20k_train_withoutAugmentation & dataset_20k_val_withoutAugmentation: 20 YCB video objects (without wood block) and without scale and rotation augmentation
+	* withWood_dataset_20k_train & withWood_dataset_20k_test: 21 YCB video objects and without scale and rotation augmentation. Not converted to COCO yet.
+* YCB_video_inCOCO: Contains the 12 test frames used by PoseCNN, that were converted to COCO (excluding the wood block annotations).
+
+To generate the datasets options have been specified in defaults.py and via the command line. The used options can be found in info.py in each dataset directory.
+Specific files are:
+* selected.txt: contains the objects used for the synthetic dataset generation (currently for the 20k dataset)
+* defaults_20k_train.py: used to generate the dataset_20k_train set (with augmentation and 20 objects)
+
+
+# Backgrounds
+* backgrounds_live: all backgrounds acquired by Fabrizio
+	* backgrounds_sanity_train & backgrounds_sanity_test: backgrounds used to generate the sanity dataset, split from backgrounds_live
+	* backgrounds_balanced_train & backgrounds_balanced_val: split of backgrounds_live, where the number of each type of background is balanced (thus leaving out some backgrounds)
+* backgrounds_10k: set of 21 different background sequences each with a total of approx. 200 frames. Depth is also available
+	* backgrounds_train_20k & backgrounds_val_20k: split of backgrounds used for the 20k datasets
+
+# Objects
+* tabletop_objects: small subset of 3 objects split in train and val with some sample frames
+* YCB_objects: contains symlinks to all YCB Video objects
+* YCB_objects_split_20k: contains a split of the YCB video objects in train and val (no symlinks)
+* distractor_objects_dir: was not used for the dataset generation
+
+
