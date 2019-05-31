@@ -81,7 +81,7 @@ def overlap(a, b):
     dx = min(a.xmax, b.xmax) - max(a.xmin, b.xmin)
     dy = min(a.ymax, b.ymax) - max(a.ymin, b.ymin)
     
-    if (dx>=0) and (dy>=0) and float(dx*dy) > MAX_ALLOWED_IOU * min((a.xmax-a.xmin)*(a.ymax-a.ymin), (b.xmax-b.xmin)*(b.ymax-b.ymin)):
+    if (dx>=0) and (dy>=0) and float(dx*dy) > (MAX_ALLOWED_IOU * min((a.xmax-a.xmin)*(a.ymax-a.ymin), (b.xmax-b.xmin)*(b.ymax-b.ymin))):
         return True
     else:
         return False
@@ -399,8 +399,9 @@ def create_image_anno(objects, distractor_objects, img_file, anno_file, bg_file,
         # we look for such a space in the user-defined region, if there is none we look in the whole image
         # try to place each one for a max number of times, then scrap the instance
         found = False
+        print("xmin ", xmin, "xmax ", xmax, "ymin ", ymin, "ymax ", ymax)
 
-        while attempt < MAX_ATTEMPTS_TO_SYNTHESIZE:
+        while attempt < MAX_ATTEMPTS_TO_SYNTHESIZE and not found:
             # place the crop somewhere in a rectangular zone at the center of the image
             x = random.randint(int(-MAX_TRUNCATION_FRACTION*o_w + MIN_X_POSITION),
                                int(MAX_X_POSITION-o_w+MAX_TRUNCATION_FRACTION*o_w))
@@ -424,6 +425,7 @@ def create_image_anno(objects, distractor_objects, img_file, anno_file, bg_file,
         # if maximum number of attempts of placing an object is reached without finding a suitable position, the
         # instance is dropped
         if (attempt == MAX_ATTEMPTS_TO_SYNTHESIZE) and not found:
+            print("dropped", obj)
             continue
 
         # log position of the crop
