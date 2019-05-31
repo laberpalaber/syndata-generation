@@ -81,7 +81,7 @@ def overlap(a, b):
     dx = min(a.xmax, b.xmax) - max(a.xmin, b.xmin)
     dy = min(a.ymax, b.ymax) - max(a.ymin, b.ymin)
     
-    if (dx>=0) and (dy>=0) and float(dx*dy) > MAX_ALLOWED_IOU*(a.xmax-a.xmin)*(a.ymax-a.ymin):
+    if (dx>=0) and (dy>=0) and float(dx*dy) > MAX_ALLOWED_IOU * min((a.xmax-a.xmin)*(a.ymax-a.ymin), (b.xmax-b.xmin)*(b.ymax-b.ymin)):
         return True
     else:
         return False
