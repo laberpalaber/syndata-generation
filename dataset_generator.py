@@ -399,7 +399,6 @@ def create_image_anno(objects, distractor_objects, img_file, anno_file, bg_file,
         # we look for such a space in the user-defined region, if there is none we look in the whole image
         # try to place each one for a max number of times, then scrap the instance
         found = False
-        print("xmin ", xmin, "xmax ", xmax, "ymin ", ymin, "ymax ", ymax)
 
         while attempt < MAX_ATTEMPTS_TO_SYNTHESIZE and not found:
             # place the crop somewhere in a rectangular zone at the center of the image

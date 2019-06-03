@@ -6,7 +6,7 @@ BACKGROUND_DIR = 'demo_data_dir/backgrounds_train_20k/'
 #BACKGROUND_DIR = 'demo_data_dir/backgrounds_val_20k/'
 BACKGROUND_GLOB_STRING = '*.jpg'
 POISSON_BLENDING_DIR = ''
-SELECTED_LIST_FILE = 'demo_data_dir/selected_32.txt'
+SELECTED_LIST_FILE = 'demo_data_dir/selected_40.txt'
 DISTRACTOR_LIST_FILE = 'demo_data_dir/neg_list.txt' 
 DISTRACTOR_DIR = 'demo_data_dir/distractor_objects_dir/'
 DISTRACTOR_GLOB_STRING = '*.jpg'
@@ -27,7 +27,7 @@ MAX_NO_OF_DISTRACTOR_OBJECTS = 0
 WIDTH = 640
 HEIGHT = 480
 MAX_ATTEMPTS_TO_SYNTHESIZE = 200
-BACKGROUND_USES = 4
+BACKGROUND_USES = 8
 
 # Parameters for objects in images
 MIN_SCALE = 1.2 # min scale for scale augmentation

@@ -73,101 +73,201 @@ CATEGORIES = [
     {
         'id': 1,
         'name': 'master_chef_can',
-        'supercategory': 'ycb',
+        'supercategory': 'YCB_video',
     },
     {
         'id': 2,
         'name': 'cracker_box',
-        'supercategory': 'ycb',
+        'supercategory': 'YCB_video',
     },
     {
         'id': 3,
         'name': 'sugar_box',
-        'supercategory': 'ycb',
+        'supercategory': 'YCB_video',
     },
     {
         'id': 4,
         'name': 'tomato_soup_can',
-        'supercategory': 'ycb',
+        'supercategory': 'YCB_video',
     },
     {
         'id': 5,
         'name': 'mustard_bottle',
-        'supercategory': 'ycb',
+        'supercategory': 'YCB_video',
     },
     {
         'id': 6,
         'name': 'tuna_fish_can',
-        'supercategory': 'ycb',
+        'supercategory': 'YCB_video',
     },
     {
         'id': 7,
         'name': 'pudding_box',
-        'supercategory': 'ycb',
+        'supercategory': 'YCB_video',
     },
     {
         'id': 8,
         'name': 'gelatin_box',
-        'supercategory': 'ycb',
+        'supercategory': 'YCB_video',
     },
     {
         'id': 9,
         'name': 'potted_meat_can',
-        'supercategory': 'ycb',
+        'supercategory': 'YCB_video',
     },
     {
         'id': 10,
         'name': 'banana',
-        'supercategory': 'ycb',
+        'supercategory': 'YCB_video',
     },
     {
         'id': 11,
         'name': 'pitcher_base',
-        'supercategory': 'ycb',
+        'supercategory': 'YCB_video',
     },
     {
         'id': 12,
-        'name': 'bleach_cleanser',
-        'supercategory': 'ycb',
+        'name': 'bleacher_cleanser',
+        'supercategory': 'YCB_video',
     },
     {
         'id': 13,
         'name': 'bowl',
-        'supercategory': 'ycb',
+        'supercategory': 'YCB_video',
     },
     {
         'id': 14,
         'name': 'mug',
-        'supercategory': 'ycb',
+        'supercategory': 'YCB_video',
     },
     {
         'id': 15,
         'name': 'power_drill',
-        'supercategory': 'ycb',
+        'supercategory': 'YCB_video',
     },
     {
         'id': 16,
         'name': 'scissors',
-        'supercategory': 'ycb',
+        'supercategory': 'YCB_video',
     },
     {
         'id': 17,
         'name': 'large_marker',
-        'supercategory': 'ycb',
+        'supercategory': 'YCB_video',
     },
     {
         'id': 18,
-        'name': 'large_clamp',
-        'supercategory': 'ycb',
+        'name': 'extra_large_clamp',
+        'supercategory': 'YCB_video',
     },
     {
         'id': 19,
-        'name': 'mustard_bottle',
-        'supercategory': 'ycb',
+        'name': 'large_clamp',
+        'supercategory': 'YCB_video',
     },
     {
         'id': 20,
         'name': 'foam_brick',
+        'supercategory': 'YCB_video',
+    },
+    {
+        'id': 21,
+        'name': 'chips_can',
+        'supercategory': 'ycb',
+    },
+    {
+        'id': 22,
+        'name': 'apple',
+        'supercategory': 'ycb',
+    },
+    {
+        'id': 23,
+        'name': 'lemon',
+        'supercategory': 'ycb',
+    },
+    {
+        'id': 24,
+        'name': 'pear',
+        'supercategory': 'ycb',
+    },
+    {
+        'id': 25,
+        'name': 'mini_soccer_ball',
+        'supercategory': 'ycb',
+    },
+    {
+        'id': 26,
+        'name': 'orange',
+        'supercategory': 'ycb',
+    },
+    {
+        'id': 27,
+        'name': 'softball',
+        'supercategory': 'ycb',
+    },
+    {
+        'id': 28,
+        'name': 'baseball',
+        'supercategory': 'ycb',
+    },
+    {
+        'id': 29,
+        'name': 'tennis_ball',
+        'supercategory': 'ycb',
+    },
+    {
+        'id': 30,
+        'name': 'a_cups',
+        'supercategory': 'ycb',
+    },
+    {
+        'id': 31,
+        'name': 'e_cups',
+        'supercategory': 'ycb',
+    },
+    {
+        'id': 32,
+        'name': 'f_cups',
+        'supercategory': 'ycb',
+    },
+    {
+        'id': 33,
+        'name': 'h_cups',
+        'supercategory': 'ycb',
+    },
+    {
+        'id': 34,
+        'name': 'i_cups',
+        'supercategory': 'ycb',
+    },
+    {
+        'id': 35,
+        'name': 'j_cups',
+        'supercategory': 'ycb',
+    },
+    {
+        'id': 36,
+        'name': 'b_lego_duplo',
+        'supercategory': 'ycb',
+    },
+    {
+        'id': 37,
+        'name': 'c_lego_duplo',
+        'supercategory': 'ycb',
+    },
+    {
+        'id': 38,
+        'name': 'm_lego_duplo',
+        'supercategory': 'ycb',
+    },
+    {
+        'id': 39,
+        'name': 'timer',
+        'supercategory': 'ycb',
+    },
+    {
+        'id': 40,
+        'name': 'rubiks_cube',
         'supercategory': 'ycb',
     },
 ]
@@ -277,8 +377,9 @@ def main():
                 for annotation_filename in annotation_files:
 
                     #print(annotation_filename)
+                    # large_clamp needs to be after extra_large_clamp to have correct mapping
                     class_id = [x['id'] for x in CATEGORIES if x['name'] in annotation_filename][0]
-
+                    #print(class_id)
                     category_info = {'id': class_id, 'is_crowd': 'crowd' in image_filename}
                     binary_mask = np.asarray(Image.open(annotation_filename)
                         .convert('1')).astype(np.uint8)
