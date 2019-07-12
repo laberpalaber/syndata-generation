@@ -69,208 +69,338 @@ LICENSES = [
     }
 ]
 
+# Categories for 21 objects tabletop test set
 CATEGORIES = [
     {
         'id': 1,
-        'name': 'master_chef_can',
-        'supercategory': 'YCB_video',
+        'name': 'sodabottle3',
+        'supercategory': 'sodabottle',
     },
     {
         'id': 2,
-        'name': 'cracker_box',
-        'supercategory': 'YCB_video',
+        'name': 'sodabottle4',
+        'supercategory': 'sodabottle',
     },
     {
         'id': 3,
-        'name': 'sugar_box',
-        'supercategory': 'YCB_video',
+        'name': 'mug1',
+        'supercategory': 'mug',
     },
     {
         'id': 4,
-        'name': 'tomato_soup_can',
-        'supercategory': 'YCB_video',
+        'name': 'mug3',
+        'supercategory': 'mug',
     },
     {
         'id': 5,
-        'name': 'mustard_bottle',
-        'supercategory': 'YCB_video',
+        'name': 'mug4',
+        'supercategory': 'mug',
     },
     {
         'id': 6,
-        'name': 'tuna_fish_can',
-        'supercategory': 'YCB_video',
+        'name': 'pencilcase5',
+        'supercategory': 'pencilcase',
     },
     {
         'id': 7,
-        'name': 'pudding_box',
-        'supercategory': 'YCB_video',
+        'name': 'pencilcase3',
+        'supercategory': 'pencilcase',
     },
     {
         'id': 8,
-        'name': 'gelatin_box',
-        'supercategory': 'YCB_video',
+        'name': 'ringbinder4',
+        'supercategory': 'ringbinder',
     },
     {
         'id': 9,
-        'name': 'potted_meat_can',
-        'supercategory': 'YCB_video',
+        'name': 'ringbinder5',
+        'supercategory': 'ringbinder',
     },
     {
         'id': 10,
-        'name': 'banana',
-        'supercategory': 'YCB_video',
+        'name': 'wallet6',
+        'supercategory': 'wallet',
     },
     {
         'id': 11,
-        'name': 'pitcher_base',
-        'supercategory': 'YCB_video',
+        'name': 'flower7',
+        'supercategory': 'flower',
     },
     {
         'id': 12,
-        'name': 'bleacher_cleanser',
-        'supercategory': 'YCB_video',
+        'name': 'flower5',
+        'supercategory': 'flower',
     },
     {
         'id': 13,
-        'name': 'bowl',
-        'supercategory': 'YCB_video',
+        'name': 'flower2',
+        'supercategory': 'flower',
     },
     {
         'id': 14,
-        'name': 'mug',
-        'supercategory': 'YCB_video',
+        'name': 'book6',
+        'supercategory': 'book',
     },
     {
         'id': 15,
-        'name': 'power_drill',
-        'supercategory': 'YCB_video',
+        'name': 'book9',
+        'supercategory': 'book',
     },
     {
         'id': 16,
-        'name': 'scissors',
-        'supercategory': 'YCB_video',
+        'name': 'hairclip2',
+        'supercategory': 'hairclip',
     },
     {
         'id': 17,
-        'name': 'large_marker',
-        'supercategory': 'YCB_video',
+        'name': 'hairclip8',
+        'supercategory': 'hairclip',
     },
     {
         'id': 18,
-        'name': 'extra_large_clamp',
-        'supercategory': 'YCB_video',
+        'name': 'hairclip6',
+        'supercategory': 'hairclip',
     },
     {
         'id': 19,
-        'name': 'large_clamp',
-        'supercategory': 'YCB_video',
+        'name': 'sprayer6',
+        'supercategory': 'sprayer',
     },
     {
         'id': 20,
-        'name': 'foam_brick',
-        'supercategory': 'YCB_video',
+        'name': 'sprayer8',
+        'supercategory': 'sprayer',
     },
     {
         'id': 21,
-        'name': 'chips_can',
-        'supercategory': 'ycb',
-    },
-    {
-        'id': 22,
-        'name': 'apple',
-        'supercategory': 'ycb',
-    },
-    {
-        'id': 23,
-        'name': 'lemon',
-        'supercategory': 'ycb',
-    },
-    {
-        'id': 24,
-        'name': 'pear',
-        'supercategory': 'ycb',
-    },
-    {
-        'id': 25,
-        'name': 'mini_soccer_ball',
-        'supercategory': 'ycb',
-    },
-    {
-        'id': 26,
-        'name': 'orange',
-        'supercategory': 'ycb',
-    },
-    {
-        'id': 27,
-        'name': 'softball',
-        'supercategory': 'ycb',
-    },
-    {
-        'id': 28,
-        'name': 'baseball',
-        'supercategory': 'ycb',
-    },
-    {
-        'id': 29,
-        'name': 'tennis_ball',
-        'supercategory': 'ycb',
-    },
-    {
-        'id': 30,
-        'name': 'a_cups',
-        'supercategory': 'ycb',
-    },
-    {
-        'id': 31,
-        'name': 'e_cups',
-        'supercategory': 'ycb',
-    },
-    {
-        'id': 32,
-        'name': 'f_cups',
-        'supercategory': 'ycb',
-    },
-    {
-        'id': 33,
-        'name': 'h_cups',
-        'supercategory': 'ycb',
-    },
-    {
-        'id': 34,
-        'name': 'i_cups',
-        'supercategory': 'ycb',
-    },
-    {
-        'id': 35,
-        'name': 'j_cups',
-        'supercategory': 'ycb',
-    },
-    {
-        'id': 36,
-        'name': 'b_lego_duplo',
-        'supercategory': 'ycb',
-    },
-    {
-        'id': 37,
-        'name': 'c_lego_duplo',
-        'supercategory': 'ycb',
-    },
-    {
-        'id': 38,
-        'name': 'm_lego_duplo',
-        'supercategory': 'ycb',
-    },
-    {
-        'id': 39,
-        'name': 'timer',
-        'supercategory': 'ycb',
-    },
-    {
-        'id': 40,
-        'name': 'rubiks_cube',
-        'supercategory': 'ycb',
+        'name': 'sprayer9',
+        'supercategory': 'sprayer',
     },
 ]
+
+#CATEGORIES = [
+#        {
+#        'id': 1,
+#        'name': 'book6',
+#        'supercategory': 'book',
+#    },
+#    {
+#        'id': 2,
+#        'name': 'sprayer8',
+#        'supercategory': 'sprayer',
+#    }
+#]
+
+
+
+# Categories for 40 objects datasets
+# CATEGORIES = [
+#     {
+#         'id': 1,
+#         'name': 'master_chef_can',
+#         'supercategory': 'YCB_video',
+#     },
+#     {
+#         'id': 2,
+#         'name': 'cracker_box',
+#         'supercategory': 'YCB_video',
+#     },
+#     {
+#         'id': 3,
+#         'name': 'sugar_box',
+#         'supercategory': 'YCB_video',
+#     },
+#     {
+#         'id': 4,
+#         'name': 'tomato_soup_can',
+#         'supercategory': 'YCB_video',
+#     },
+#     {
+#         'id': 5,
+#         'name': 'mustard_bottle',
+#         'supercategory': 'YCB_video',
+#     },
+#     {
+#         'id': 6,
+#         'name': 'tuna_fish_can',
+#         'supercategory': 'YCB_video',
+#     },
+#     {
+#         'id': 7,
+#         'name': 'pudding_box',
+#         'supercategory': 'YCB_video',
+#     },
+#     {
+#         'id': 8,
+#         'name': 'gelatin_box',
+#         'supercategory': 'YCB_video',
+#     },
+#     {
+#         'id': 9,
+#         'name': 'potted_meat_can',
+#         'supercategory': 'YCB_video',
+#     },
+#     {
+#         'id': 10,
+#         'name': 'banana',
+#         'supercategory': 'YCB_video',
+#     },
+#     {
+#         'id': 11,
+#         'name': 'pitcher_base',
+#         'supercategory': 'YCB_video',
+#     },
+#     #{
+#         #'id': 12,
+#         #'name': 'bleacher_cleanser',
+#         #'supercategory': 'YCB_video',
+#     #},
+#     {
+#         'id': 12,
+#         'name': 'bleach_cleanser',
+#         'supercategory': 'YCB_video',
+#     },
+#     {
+#         'id': 13,
+#         'name': 'bowl',
+#         'supercategory': 'YCB_video',
+#     },
+#     {
+#         'id': 14,
+#         'name': 'mug',
+#         'supercategory': 'YCB_video',
+#     },
+#     {
+#         'id': 15,
+#         'name': 'power_drill',
+#         'supercategory': 'YCB_video',
+#     },
+#     {
+#         'id': 16,
+#         'name': 'scissors',
+#         'supercategory': 'YCB_video',
+#     },
+#     {
+#         'id': 17,
+#         'name': 'large_marker',
+#         'supercategory': 'YCB_video',
+#     },
+#     {
+#         'id': 18,
+#         'name': 'extra_large_clamp',
+#         'supercategory': 'YCB_video',
+#     },
+#     {
+#         'id': 19,
+#         'name': 'large_clamp',
+#         'supercategory': 'YCB_video',
+#     },
+#     {
+#         'id': 20,
+#         'name': 'foam_brick',
+#         'supercategory': 'YCB_video',
+#     },
+#     {
+#         'id': 21,
+#         'name': 'chips_can',
+#         'supercategory': 'ycb',
+#     },
+#     {
+#         'id': 22,
+#         'name': 'apple',
+#         'supercategory': 'ycb',
+#     },
+#     {
+#         'id': 23,
+#         'name': 'lemon',
+#         'supercategory': 'ycb',
+#     },
+#     {
+#         'id': 24,
+#         'name': 'pear',
+#         'supercategory': 'ycb',
+#     },
+#     {
+#         'id': 25,
+#         'name': 'mini_soccer_ball',
+#         'supercategory': 'ycb',
+#     },
+#     {
+#         'id': 26,
+#         'name': 'orange',
+#         'supercategory': 'ycb',
+#     },
+#     {
+#         'id': 27,
+#         'name': 'softball',
+#         'supercategory': 'ycb',
+#     },
+#     {
+#         'id': 28,
+#         'name': 'baseball',
+#         'supercategory': 'ycb',
+#     },
+#     {
+#         'id': 29,
+#         'name': 'tennis_ball',
+#         'supercategory': 'ycb',
+#     },
+#     {
+#         'id': 30,
+#         'name': 'a_cups',
+#         'supercategory': 'ycb',
+#     },
+#     {
+#         'id': 31,
+#         'name': 'e_cups',
+#         'supercategory': 'ycb',
+#     },
+#     {
+#         'id': 32,
+#         'name': 'f_cups',
+#         'supercategory': 'ycb',
+#     },
+#     {
+#         'id': 33,
+#         'name': 'h_cups',
+#         'supercategory': 'ycb',
+#     },
+#     {
+#         'id': 34,
+#         'name': 'i_cups',
+#         'supercategory': 'ycb',
+#     },
+#     {
+#         'id': 35,
+#         'name': 'j_cups',
+#         'supercategory': 'ycb',
+#     },
+#     {
+#         'id': 36,
+#         'name': 'b_lego_duplo',
+#         'supercategory': 'ycb',
+#     },
+#     {
+#         'id': 37,
+#         'name': 'c_lego_duplo',
+#         'supercategory': 'ycb',
+#     },
+#     {
+#         'id': 38,
+#         'name': 'm_lego_duplo',
+#         'supercategory': 'ycb',
+#     },
+#     {
+#         'id': 39,
+#         'name': 'timer',
+#         'supercategory': 'ycb',
+#     },
+#     {
+#         'id': 40,
+#         'name': 'rubiks_cube',
+#         'supercategory': 'ycb',
+#     },
+# ]
 def filter_for_jpeg(root, files):
     file_types = ['*.jpeg', '*.jpg']
     file_types = r'|'.join([fnmatch.translate(x) for x in file_types])
