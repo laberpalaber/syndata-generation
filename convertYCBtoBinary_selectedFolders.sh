@@ -5,7 +5,7 @@
 #    Arguments: ycb_video_data_path target_dir selected.txt 
 #
 #    ycb_video_data_path:      	path to folder where the YCB video sequences are stored (/data) 
-#    target_dir:        	directory where the results shall be saved to
+#    target_dir:        	directory where the results shall be saved to (absolute path)
 #    selected.txt:      	file containing the folders to convert
 
 mkdir $2

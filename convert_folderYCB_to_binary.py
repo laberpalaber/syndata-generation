@@ -2,6 +2,7 @@
 # 1) IMAGE_DIR containing all the color images
 # 2) OUTPUT_DIR containing the created binary masks, naming convention
 #    imageNumber_className_objectNumber.png
+# FOLDER_PATH and TARGET_PATH have to be given as absolute paths
 
 import os
 from read_mat_file import return_classes
@@ -36,7 +37,7 @@ CATEGORIES = {
         '9': 'potted_meat_can',
         '10': 'banana',
         '11': 'pitcher_base',
-        '12': 'bleach_cleanser',
+        '12': 'bleacher_cleanser',
         '13': 'bowl',
         '14': 'mug',
         '15': 'power_drill',
@@ -44,7 +45,7 @@ CATEGORIES = {
         '17': 'scissors',
         '18': 'large_marker',
         '19': 'large_clamp',
-        '20': 'mustard_bottle',
+        '20': 'extra_large_clamp',
         '21': 'foam_brick',
 }
 

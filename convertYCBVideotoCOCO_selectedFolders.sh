@@ -20,11 +20,11 @@ while read -r line; do
     #cd /$path && for i in `ls `; do echo "Path - $i"; done
 
     echo "Create binary images for $path" 
-    cd /home/IIT.LOCAL/ebunz/mask_rcnn/syndata-generation
-    python convert_folderYCB_to_binary.py $1$path $2$path
+    #cd /home/IIT.LOCAL/ebunz/mask_rcnn/syndata-generation
+    #python convert_folderYCB_to_binary.py $1$path $2$path
     echo "Rename images in $path" 
-    cd $2$path/images
-    rename  's/-/_/' *.png
+    #cd $2$path/images
+    #rename  's/-/_/' *.png
     echo "Convert $path to COCO"
     cd /home/IIT.LOCAL/ebunz/mask_rcnn/syndata-generation
     python ycb_to_coco_parallel_py2.py $2$path png
